@@ -42,8 +42,9 @@ def _text_clean(text: str) -> List[str]:
     return re.sub(r"\s+", " ", text.lower()).strip().split()
 
 
-def _hash_func(text: str, a: int, b: int) -> int:
-    return (int(a) * hash(text) + int(b)) % PRIME_NUMBER
+def _hash_func(grams: List[List[str]], hash_values: np.array) -> int:
+    base_hash = [hash(" ".join(gram)) for gram in grams]
+    return [min((int(a) * h + int(b)) % PRIME_NUMBER for h in base_hash) for a, b in hash_values]
 
 
 def _jaccard_similarity(set1: set, set2: set) -> float:
@@ -65,15 +66,25 @@ def minhash_deduplication(
     # compute min-hash signature for each document
     hash_values = np.random.randint(1, PRIME_NUMBER, size=(num_hashes, 2))
     hash_signature = dict()
-    for index, filename in enumerate(input_files):
+    index = 0
+    nonempty_files = list()
+    total_count = len(input_files)
+    for filename in input_files:
         with open(filename, "r") as fin:
             words = _text_clean(fin.read())
         grams = list(ngrams(words, num_ngrams))
-        sign = [min(_hash_func(" ".join(gram), a, b) for gram in grams) for a, b in hash_values]
+        if len(grams) <= 0:
+            continue
+        sign = _hash_func(grams, hash_values)
         hash_signature[index] = sign
+        index += 1
+        if index % 30 == 0:
+            print(f"Processed {index} out of {total_count} files")
+        nonempty_files.append(filename)
+    print(f"Number of non-empty files: {len(nonempty_files)} out of {total_count} input files.")
 
     # apply locality-sensitive hashing
-    n = len(input_files)
+    n = len(hash_signature)
     found_groups = {i: {i} for i in range(n)}
     found_keys = {i: i for i in range(n)}
     for i in range(n):
@@ -86,10 +97,10 @@ def minhash_deduplication(
                     flag = True
                     break
             if flag:
-                with open(input_files[i], "r") as fin1:
+                with open(nonempty_files[i], "r") as fin1:
                     words = _text_clean(fin1.read())
                 grams1 = list(ngrams(words, num_ngrams))
-                with open(input_files[j], "r") as fin2:
+                with open(nonempty_files[j], "r") as fin2:
                     words = _text_clean(fin2.read())
                 grams2 = list(ngrams(words, num_ngrams))
                 if _jaccard_similarity(set(grams1), set(grams2)) > jaccard_threshold:
@@ -105,7 +116,7 @@ def minhash_deduplication(
     # output one file from each group
     for group in found_groups.values():
         rep = random.choice(list(group))
-        filename = input_files[rep]
+        filename = nonempty_files[rep]
         output_filename = os.path.join(output_directory, os.path.basename(filename))
         with open(filename, "r") as fin, open(output_filename, "w") as fout:
             fout.write(fin.read())

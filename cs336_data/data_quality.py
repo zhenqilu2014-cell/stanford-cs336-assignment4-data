@@ -77,8 +77,8 @@ def gopher_quality_filter(text: str) -> bool:
     return True
 
 
-def classify_quality(text: str) -> tuple[str, float]:
+def classify_quality(text: str, model = quality_classify_model) -> tuple[str, float]:
     text = text.replace("\r", " ").replace("\n", " ").replace("\t", " ")
     text = re.sub(r"\s+", " ", text).strip()
-    label, conf = quality_classify_model.predict(text)
+    label, conf = model.predict(text)
     return label[0].replace("__label__", ""), conf[0]
