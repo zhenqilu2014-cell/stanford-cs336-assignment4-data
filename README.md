@@ -78,3 +78,27 @@ To submit, run `./test_and_make_submission.sh` . This script will install your
 code's dependencies, run tests, and create a zip with the output. We
 should be able to unzip your submitted tarball and run
 `./test_and_make_submission.sh` to verify your test results.
+
+## My Contributions
+
+This assignment involved building a complete data pipeline for language model training, including data quality filtering, deduplication, tokenization, training, and evaluation.
+
+### Data Quality Filtering
+- `cs336_data/data_quality.py` — Implemented data quality filters and heuristics to identify high-quality text documents from Common Crawl.
+- `cs336_data/train_quality_classifier.ipynb` — Trained a quality classifier to score and filter documents based on learned quality signals.
+
+### Deduplication
+- `cs336_data/deduplication.py` — Implemented document-level deduplication to remove near-duplicate documents from the training corpus, reducing redundancy and improving data diversity.
+
+### Language Modeling Pipeline
+- `cs336_data/language_modeling.py` — Built the full language modeling pipeline: data loading, tokenization with GPT-2 tokenizer, batching, and training/evaluation loop integration.
+- `cs336_data/language_modeling.ipynb` — Companion notebook for interactive exploration of the language modeling pipeline, including data inspection, tokenization visualization, and evaluation on Paloma validation sets.
+
+### Common Crawl Processing
+- `cs336_data/common_crawl.py` — Implemented processing logic for Common Crawl WET files, including extraction, filtering, and serialization into binary format for efficient training.
+
+### Baseline Model Integration
+- `cs336_basics/optimizer.py` — Extended the baseline optimizer to support the updated training pipeline.
+
+### Testing
+- `tests/adapters.py` — Updated test adapters to validate the new data filtering, deduplication, and language modeling implementations.
